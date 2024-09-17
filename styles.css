@@ -14,7 +14,8 @@ body {
 
 video {
     width: 100vw;  /* Full width of the viewport */
-    height: auto;  /* Maintain aspect ratio */
+    height: 100vh;  /* Maintain aspect ratio */
+    position: absolute;
 }
 
 .overlay {
