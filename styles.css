@@ -1,0 +1,30 @@
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #000;
+}
+
+.video-container {
+    position: relative;
+    overflow: hidden;
+}
+
+video {
+    width: 100vw;  /* Full width of the viewport */
+    height: auto;  /* Maintain aspect ratio */
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; /* all of live feed */
+    height: 100%; /* all of feed */
+    object-fit: cover; /* unnessary but wanna anyway*/
+    mix-blend-mode: multiply; /* Apply Multiply blend mode */
+    opacity: 10; /* Trying to code myself and increase opacity */
+    pointer-events: none; /* Allow clicks to pass through the overlay */
+}
