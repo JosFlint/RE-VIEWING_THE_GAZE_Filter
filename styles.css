@@ -8,7 +8,7 @@ body {
 }
 
 .video-container {
-    position: relative;
+    position: absolute;
     overflow: hidden;
 }
 
