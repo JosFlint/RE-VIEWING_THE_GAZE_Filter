@@ -3,14 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Feed with Multiply Overlay</title>
-    <link rel="stylesheet" href="styles.css">
+        <title>Re-Viewing the Gaze Digital Lens</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100dvh;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh; /* Prevents potential overflow */
+            overflow: hidden;
+            <input type="range" id="overlay-slider" min="0" max="1" step="0.01" value="1">
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Fill the screen */
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            mix-blend-mode: multiply;
+            opacity: 1;
+            pointer-events: none;
+        }
+
+        .shutter-button {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            border: none;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .camera-toggle-button {
+    position: absolute;
+    bottom: 50px;
+    right: 20px;
+    background-color: rgba(112, 112, 112, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 5px;
+}
+
+.camera-toggle-icon {
+    width: 40px;  /* Adjust size of the image */
+    height: 40px;
+    object-fit: contain; /* Ensures it fits nicely */
+}
+
+      #menuButton {
+        position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 11;
+        }
+        #menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            height: 0;
+            overflow: hidden;
+            transition: height 0.5s ease;
+            z-index: 10;
+        }
+        #menu.open {
+            height: 100vh;
+        }
+        #menuContent {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        #menuContent a {
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            margin: 10px;
+      }
+      #infoButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 12;
+        }
+        #infoPopup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 11;
+            display: flex; /* Keep it visible by default */
+        }
+        #infoPopupContent {
+            margin: 20px;
+            text-align: center;
+        }
+        #infoPopupContent h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        #infoPopupContent p {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        #infoPopupClose {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 12;
+        }
+        #infoPopupClose:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+            
+        #overlay-slider {
+            position: absolute;
+            bottom: 50%; /* Align it vertically with the bottom of the shutter button */
+            left: 30px;  /* Align it horizontally with the menu button */
+            transform: translateX(-50%) rotate(270deg); /* Rotate the slider to make it vertical */
+            width: 100px;
+            height: 5px; /* Set height for vertical slider */
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        #overlay-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+    </style>
 </head>
 <body>
     <div class="video-container">
         <video id="video" autoplay playsinline></video>
         <img class="overlay" alt="Overlay Image">
+        <button class="shutter-button" id="shutter-button"></button>
+        <button class="camera-toggle-button" id="camera-toggle-button">
+    <img src="Switch_Icon.png" alt="Switch Camera" alt="Switch Camera" class="camera-toggle-icon">
+</button>
+
     </div>
-    <script src="script.js"></script>
+  
+<!-- Menu Button -->
+        <button id="menuButton" onclick="toggleMenu()">Menu</button>
+                       
+      <!-- Menu -->
+        <div id="menu">
+            <div id="menuContent">
+                <a href="https://josflint.com">Artist Website</a>
+                <a href="https://josflint.github.io/RE-VIEWING_THE_GAZE/">Virtual Tour</a>
+                <a href="https://sdcapgshow2024.lboro.ac.uk/?post_type=student&p=336">MA Website</a>
+                <a href="https://josflint.github.io/RE-VIEWING_THE_GAZE_Filter/">Camera Filter</a>
+              </div>
+            </div>
+        <!-- Information Button -->
+        <button id="infoButton" onclick="toggleInfo()">Info</button>
+      <!-- Information Popup -->
+        <div id="infoPopup">
+            <div>
+                <h1>Information</h1>
+                <p>This digital lens is apart of Jo Flint's 2024 exhibition titled Re-Viewing the Gaze.<br><br>
+                This lens can be used to interact with the artwork exhibited; seperating the blue and red coalesant images presented. Revealing the artwork's object of discussion. <br><br><br>
+                Interface: <br><br>
+                "Info" button displays this pop up. <br><br>
+                "Menu" button displays links to project and artist.<br><br>
+                The left-hand scroll reduces or increases the red tint overlay. <br><br> 
+                Please press the "Info" button at the top right to exit this popup.
+            </p>
+        <!-- Information Button -->
+        <button id="infoButton" onclick="toggleInfo()">Info</button>
+    </div>
+    </div>
+<!-- Overlay Opacity Slider -->
+        <input type="range" id="overlay-slider" min="0" max="1" step="0.01" value="1">
+    <script>
+        window.addEventListener('load', function() {
+            const video = document.getElementById('video');
+            const overlay = document.querySelector('.overlay');
+            const shutterButton = document.getElementById('shutter-button');
+            const cameraToggleButton = document.getElementById('camera-toggle-button');
+
+            let currentStream;
+            let currentFacingMode = "environment"; // Start with the back camera
+
+            // Function to start the video stream
+            function startCamera(facingMode) {
+                if (currentStream) {
+                    // Stop the current stream if it exists
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+
+                // Request access to the camera with the specified facingMode
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, focusMode: "continuous" } })
+                    .then(function(stream) {
+                        // Set the video source to the stream from the camera
+                        video.srcObject = stream;
+                        video.play();
+                        currentStream = stream; // Save the current stream
+                    })
+                    .catch(function(err) {
+                        console.error('Error accessing the camera: ', err);
+                    });
+            }
+
+            // Initialize with back camera
+            startCamera(currentFacingMode);
+
+            // Set the overlay image source
+            overlay.src = "Overlay.png";
+
+            // Shutter button click event to take a snapshot
+shutterButton.addEventListener('click', function() {
+    // Get the current overlay opacity value from the slider
+    const overlayOpacity = document.getElementById("overlay-slider").value;
+
+    // Set the overlay opacity dynamically based on the slider value
+    overlay.style.opacity = overlayOpacity;
+
+    // Create a canvas to draw the video and the overlay
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    // Set the canvas dimensions to the video dimensions
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw the video on the canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Apply the overlay filter on the canvas
+    const overlayImage = new Image();
+    overlayImage.src = overlay.src;
+    overlayImage.onload = function() {
+        // Draw the overlay on top of the video frame
+        context.globalCompositeOperation = 'multiply';
+        context.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+
+        // Convert the canvas to a data URL and trigger a download with the new file name
+        const dataURL = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = 'Re-Viewing the Gaze by Jo Flint.png'; // Set the custom file name here
+        a.click();
+    };
+});
+
+            // Camera toggle button to switch between front and back cameras
+            cameraToggleButton.addEventListener('click', function() {
+                // Toggle between front and back cameras
+                currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+                startCamera(currentFacingMode); // Restart the camera with the new facingMode
+            });
+
+            // Tap to focus on the camera
+            video.addEventListener('click', function(event) {
+                const videoRect = video.getBoundingClientRect();
+                const x = event.clientX - videoRect.left;
+                const y = event.clientY - videoRect.top;
+
+                if (currentStream) {
+                    const track = currentStream.getVideoTracks()[0];
+                    const capabilities = track.getCapabilities();
+
+                    if (capabilities.focus) {
+                        // If the camera supports focus adjustment
+                        track.applyConstraints({
+                            advanced: [{
+                                focusMode: 'manual',
+                                focusDistance: {
+                                    x: x / video.videoWidth, // Relative x position
+                                    y: y / video.videoHeight // Relative y position
+                                }
+                            }]
+                        }).then(() => {
+                            console.log('Focus set to position:', {x, y});
+                        }).catch(err => {
+                            console.error('Error setting focus:', err);
+                        });
+                    }
+                }
+            });
+        });
+      video.addEventListener('click', (event) => {
+    const focusIndicator = document.createElement('div');
+    focusIndicator.style.position = 'absolute';
+    focusIndicator.style.border = '2px solid white';
+    focusIndicator.style.width = '50px';
+    focusIndicator.style.height = '50px';
+    focusIndicator.style.borderRadius = '50%';
+    focusIndicator.style.left = `${event.clientX - 25}px`;
+    focusIndicator.style.top = `${event.clientY - 25}px`;
+    focusIndicator.style.transition = 'opacity 0.5s ease-out';
+    focusIndicator.style.opacity = '1';
+    document.body.appendChild(focusIndicator);
+    setTimeout(() => {
+        focusIndicator.style.opacity = '0';
+        focusIndicator.remove();
+    }, 500);
+});
+
+            // Toggle menu visibility
+    function toggleMenu() {
+        const menu = document.getElementById('menu');
+        menu.classList.toggle('open');
+    }
+      // Toggle information popup
+    function toggleInfo() {
+        const infoPopup = document.getElementById('infoPopup');
+        infoPopup.style.display = infoPopup.style.display === 'none' ? 'flex' : 'none';
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+    const overlay = document.querySelector(".overlay");
+    const slider = document.getElementById("overlay-slider");
+
+    // Adjust opacity when slider moves
+    slider.addEventListener("input", function () {
+        overlay.style.opacity = slider.value;
+    });
+});
+
+    </script>
 </body>
 </html>
